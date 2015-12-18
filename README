@@ -1,0 +1,13 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=5288
+
+vim-rubyformat is a simple vim plugin, that automatically reformats/beautifies ruby code, either when a ruby file is saved or when ff is pressed whilst in normal mode.
+
+Step 1. In any .rb (ruby) file, when save is called, the RubyFormat() function should automatically be called. It's as simple as that.
+Step 2 (Optional). Press ff in normal mode to call the RubyFormat() function.
+
+Settings:
+For other keybindings, simply bind `:call RubyFormat()` to your chosen keybinding in your vimrc file. Example: `nnoremap fm :call RubyFormat()<CR>`
+
+`let g:remove_extra_lines = 2` is the current default, which deletes any extra blank lines more than 2 in a row. Place in vimrc to change the value.
+
+To disable autoformatting on file save, place `let g:rubyformat_on_save = 0` in your vimrc file.
