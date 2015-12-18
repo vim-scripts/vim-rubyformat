@@ -9,10 +9,6 @@ if !exists("g:remove_extra_lines")
 	let g:remove_extra_lines = 2
 endif
 
-if !exists("g:strip_trailing_spaces")
-	let g:strip_trailing_spaces = 1
-endif
-
 let g:lines = ""
 let i = 0
 while i <= g:remove_extra_lines
@@ -23,6 +19,17 @@ endwhile
 function! RubyFormat()
 	" SAVE CURSOR POSITION IN WINDOW BEFORE FORMAT
 	:let l:winview = winsaveview()
+
+	" MAKE SURE KEYWORDS SUCH AS `class` OR `def`
+	" START ON THEIR OWN LINE AND DO NOT HAVE CODE BEFORE IT
+	" ALTHOUGH IF THE KEYWORD CLASS IS BEING USED IN THE
+	" CONTEXT OF `object.class` DO NOT CREATE EMPTY LINES
+	:%s/\([^\n\|^.]\)\(\(\<class\>\C\|\<def\>\C\).*\)/\1\r\r\2/ge
+
+	" ON A LINE THAT STARTS WITH THE KEYWORD `end`, MOVE ANYTHING AFTER IT
+	" TO IT'S OWN LINE AS WELL AS MAKE SURE THAT ANYTHING THAT COMES AFTER
+	" THE KEYWORD `end` HAS AT LEAST ONE EMPTY LINE BETWEEN THEM
+	:g!/^\s\{-\}\<end\>.call.*/s/^\(\s\{-\}\<end\>\)\n\=\([^\n]\)/\1\r\r\2/ge
 	
 	" MAKE A SPACE BETWEEN ANY `{` OR `}` CHARACTERS ON LINES THAT DO NOT CONTAIN INTERPOLATION
 	:g!/[^"]\+#{/s/\(\S\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
@@ -91,47 +98,66 @@ function! RubyFormat()
 	
 	" TODO: DO BELOW 3 REGEX METHODS BELOW WITH DO BLOCKS
 	
-	" `def hello {|name|puts "sup"
-	"	puts "hello"}`
+	" def hello {|name|puts "sup"
+	"   puts "hello"}
 	" BECOMES
-	" `def hello { |name|
-	"	puts "sup"
-	"	puts "hello"
-	" }`
-	:g!/.*{.*}$/s/\(.*\s\{-\}{\s\{-\}\(|.*|\)\s\{-\}.\{-\}\)\([^\r]\)/\1\r\t\3/ge
+	" def hello { |name|
+	"   puts "sup"
+	"   puts "hello"
+	" }
+	:g!/.*{.*}\(.call.*\)\=$/s/\(.*\s\{-\}{\s\{-\}\(|.*|\)\s\{-\}.\{-\}\)\([^\r]\)/\1\r\t\3/ge
 
-	" `def hello {puts "sup"
-	"	puts "hello"}`
+	" def hello {puts "sup"
+	"   puts "hello"}
 	" BECOMES
-	" `def hello {
-	"	puts "sup"
-	"	puts "hello"
-	" }`
-	:g!/.*".*{.*\|.*{.*".*{\|.*{.*}$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
+	" def hello {
+	"   puts "sup"
+	"   puts "hello"
+	" }
+	:g!/.*".*{.*\|.*{.*".*{\|.*{.*}\(.call.*\)\=$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
+
+	" do puts "hello"
+	"   puts "there"
+	" end
+	" BECOMES
+	" do
+	"   puts "hello"
+	"   puts "there"
+	" end
+	:g!/.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)do\([^\n]\)/\1do\r\2/ge
+	
+	" do
+	"   puts "hello" end
+	" BECOMES
+	" do
+	"   puts "there"
+	" end
+	" HOWEVER THE ABOVE WON'T MOVE THE END KEYWORD DOWN
+	" IT'S IN A LINE THAT LOOKS LIKE THE FOLLOWING:
+	" `5.times do puts "hey" end` <- WHERE BOTH KEYWORD AND END ARE
+	" ON THE SAME LINE. THE SAME GOES FOR `if true do puts "it's true" end`
+	:g!/^\s\{-\}\<if\|do\>/s/\([^\n\|^\s\|^\t]\)\<end\>/\1\rend
 
 	" SAME AS THE ABOVE BUT ALLOWS FOR `def hello { puts "#{}" ... \n }`
 	:g!/.*{.*}$\|".*["]\+.*{.*["]\+.*"\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\(.*".*{.*".*\)/\1\r\t\2/ge
 
-	" REPLACE ANYTHING LIKE `` WITH `` IF IT DOESN'T CONTAIN ALL OF
-	" THE START FOLLOWED BY `{` FOLLOWED BY ANYTHING AND ENDING WITH `}`
-	" ALL ON THE SAME LINE, E.G. `def hello { puts "hello" }`
-	" `def hello {
-	"	puts "hello"}`
+	" IF NOT IN THE SAME LINE STYLE OF `def hello { puts "hello" }`
+	" def hello {
+	"   puts "hello"}
 	" BECOMES
-	" `def hello {
-	"	puts "hello"
-	" }`
+	" def hello {
+	"   puts "hello"
+	" }
 	if &ft != 'eruby' " FOR RUBY FILES THAT AREN'T ERUBY FILETYPE
 		" TODO: MAKE SURE THIS IS WORKING FOR RUBY FILES
-		:g!/.*".*}.*".*\|.*{.*}$/s/\([^\r]\)\(.*\)}/\1\2\r}/ge
+		:g!/.*".*}.*".*\|.*{.*}\(.call.*\)\=$/s/\([^\r]\)\(.*\)}/\1\2\r}/ge
 	endif
 	
 	" THIS IS THE SAME AS THE ABOVE, EXCEPT WILL STILL WORK LIKE THIS:
 	" THE #{} INTERPOLATION WOULD STOP THE ABOVE REGEX FROM WORKING.
-	" `def hello {
-	" puts "#{name}"}`
+	" def hello {
+	" puts "#{name}"}
 	:g!/[^#]{.*}\s\{-\}$/s/\(.*".*#{.*\)}\s\{-\}$/\1\r}/ge
-	" :g!/.*[^#]{.*}$\|.*["]\+.*#{.*/s/\([^\r]\)}$/\1\r}/ge
 	
 	" REPLACE MULTIPLE WHITE SPACE CHARACTERS WITH A SINGLE SPACE
 	:g!/"[^"]\+"\|'[^']\+'/s/\s\+/ /ge 
@@ -141,9 +167,7 @@ function! RubyFormat()
 	:g/"[^"]\+"\|'[^']\+'/s/\s\+\("[^"]\{-\}"\)\s\+/ \1 /ge 
 
 	" REMOVE TRAILING WHITE SPACE FROM ANY LINE
-	if g:strip_trailing_spaces > 0 
-		%s/\s\+$//e
-	endif
+	%s/\s\+$//e
 	
 	" REMOVE EXTRA LINES FROM CONFIG VARIABLE g:remove_extra_lines = 3
 	:execute '%s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'

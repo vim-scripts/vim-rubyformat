@@ -41,9 +41,6 @@ Example: ``nnoremap fm :call RubyFormat()<CR>``
 ``let g:remove_extra_lines = 2`` is the current default, which deletes any
 extra blank lines more than 2 in a row. Place in vimrc to change the value.
 
-``let g:strip_trailing_spaces = 1`` is the enabled by default. To disable
-simply set the value to ``0``.
-
 ===========================================================================
 
 ### EXAMPLE REFORMATS:
@@ -127,21 +124,55 @@ lambda { |name|
 ===========================================================================
 Before:
 ```
--> {
-	puts "true"}
+-> do
+	puts "true" end
 
 -> {
 	puts "#{itsTrue} #{orIsIt}"}
 ```
 After:
 ```
--> {
+-> do
   puts "true"
-}
+end
 
 -> {
   puts "#{itsTrue} #{orIsIt}"
 }
+```
+===========================================================================
+Before:
+```
+if true
+# do something
+end class Hello
+	# do something in the class
+end
+
+if something
+# do something
+end if somethingElse
+# do something else
+end
+```
+
+After:
+```
+if true
+  # do something
+end
+
+class Hello
+  # do something in the class
+end
+
+if something
+  # do something
+end
+
+if somethingElse
+  # do something else
+end
 ```
 ===========================================================================
 ##### Copyright (C) Benjamin Radovsky <radovskyb@gmail.com>.
