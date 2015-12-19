@@ -128,7 +128,7 @@ function! RubyFormat()
 	"   puts "hello"
 	"   puts "there"
 	" end
-	:g!/.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)do\([^\n]\)/\1do\r\2/ge
+	:g!/.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)\<do\>\([^\n]\)/\1do\r\2/ge
 	
 	" do
 	"   puts "hello" end
