@@ -5,6 +5,10 @@ set smarttab
 set smartindent
 au FileType ruby set tabstop=2 shiftwidth=2 softtabstop=2
 
+if !exists("g:rubyformat_on_save")
+	let g:rubyformat_on_save = 1
+endif
+
 if !exists("g:remove_extra_lines")
 	let g:remove_extra_lines = 2
 endif
@@ -199,8 +203,11 @@ endfunction
 au FileType ruby nnoremap <buffer> ff :silent! call RubyFormat()<CR>
 
 " CALL THE `RubyFormat` FUNCTION ON SAVE IF INSIDE A RUBY FILE
-autocmd FileType ruby autocmd BufWritePre <buffer> :silent! call RubyFormat()
+" IF `g:rubyformat_on_save > 0`
+if g:rubyformat_on_save > 0
+	autocmd FileType ruby autocmd BufWritePre <buffer> :silent! call RubyFormat()
 
-" DO THE SAME AS THE ABOVE `autocmd` BUT FOR ERUBY FILES
-" TODO: ADD MORE SPECIFIX ERB BASED REFORMATTING
-autocmd FileType eruby autocmd BufWritePre <buffer> :silent! call RubyFormat()
+	" DO THE SAME AS THE ABOVE `autocmd` BUT FOR ERUBY FILES
+	" TODO: ADD MORE SPECIFIX ERB BASED REFORMATTING
+	autocmd FileType eruby autocmd BufWritePre <buffer> :silent! call RubyFormat()
+endif

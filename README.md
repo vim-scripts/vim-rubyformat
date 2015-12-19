@@ -41,6 +41,9 @@ Example: ``nnoremap fm :call RubyFormat()<CR>``
 ``let g:remove_extra_lines = 2`` is the current default, which deletes any
 extra blank lines more than 2 in a row. Place in vimrc to change the value.
 
+To disable autoformatting on file save, place ``let g:rubyformat_on_save = 0``
+in your vimrc file.
+
 ===========================================================================
 
 ### EXAMPLE REFORMATS:
