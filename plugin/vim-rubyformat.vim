@@ -33,7 +33,7 @@ function! RubyFormat()
 	" ON A LINE THAT STARTS WITH THE KEYWORD `end`, MOVE ANYTHING AFTER IT
 	" TO IT'S OWN LINE AS WELL AS MAKE SURE THAT ANYTHING THAT COMES AFTER
 	" THE KEYWORD `end` HAS AT LEAST ONE EMPTY LINE BETWEEN THEM
-	:g!/^\s\{-\}\<end\>.call.*/s/^\(\s\{-\}\<end\>\)\n\=\([^\n]\)/\1\r\r\2/ge
+	:g!/^\s\{-\}\<end\>\([.call.*\|\n\+]\)\|\(\s\+\n\+\)/s/^\(\s\{-\}\<end\>\)\n\=\([^\n]\)/\1\r\r\2/ge
 	
 	" MAKE A SPACE BETWEEN ANY `{` OR `}` CHARACTERS ON LINES THAT DO NOT CONTAIN INTERPOLATION
 	:g!/[^"]\+#{/s/\(\S\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
