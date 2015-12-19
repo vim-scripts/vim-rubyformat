@@ -36,12 +36,17 @@ function! RubyFormat()
 	:g!/^\s\{-\}\<end\>\([.call.*\|\n\+]\)\|\(\s\+\n\+\)/s/^\(\s\{-\}\<end\>\)\n\=\([^\n]\)/\1\r\r\2/ge
 	
 	" MAKE A SPACE BETWEEN ANY `{` OR `}` CHARACTERS ON LINES THAT DO NOT CONTAIN INTERPOLATION
-	:g!/[^"]\+#{/s/\(\S\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
-	:g!/[^"]\+.*#{/s/\(\S\{-\}\)\s\{-\}\(\S\+\)}/\1 \2 }/ge
+	:%s/\(.\{-\}\){\s\{-\}\(\S\{-\}\)\(\s\{-\}".\{-\}{.\{-\}}.\{-\}".\{-\}\)\s\=\s\{-\}}/\1{ \2\3 }/ge
+	" :g!/[^"]\+#{/s/\(\S\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
+	" :g!/[^"]\+.*#{/s/\(\S\{-\}\)\s\{-\}\(\S\+\)}/\1 \2 }/ge
 
 	" MAKE A SPACE BETWEEN ANY `{` OR `}` CHARACTERS ON LINES THAT DO CONTAIN INTERPOLATION
-	:g/[^"]\+#{/s/\([^#]\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
-	:g/[^"]\+#{/s/\([^#]\+\){/\1 {/ge
+	" :g/[^"]\+#{/s/\([^#]\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
+	" :g/[^"]\+#{/s/\([^#]\+\){/\1 {/ge
+	
+	" MAKE A SPACE BEFORE ANY FIRST OCCURANCE OF A `{` ON A LINE AS LONG AS
+	" IT'S NOT INSIDE OF A STRING
+	:g!/.\{-\}".\{-\}{/s/\(.\{-\}\)\s\{-\}{/\1 {/ge
 	" NOW REMOVE THE EXTRA SPACES CREATED IN THE ABOVE REGEX SUBSTITUTION
 	%s/\s\+{/ {/ge
 
@@ -53,11 +58,13 @@ function! RubyFormat()
 
 	" AFTER RUNNING THE ABOVE 3 REGEX, ONLY THEN, TO KEEP THE CORRECT ORDER MAKE A
 	" SPACE BEFORE A `}` AT THE END OF A LINE THAT CONTAINS INTERPOLATION
-	:g/[^"]\+".*#{/s/\(\S\+\)}\s\{-\}$/\1 }/ge
+	:g/[^"]\+".*#\={\=/s/\(\S\+\)}\s\{-\}$/\1 }/ge
+	" :g/[^"]\+".*#{/s/\(\S\+\)}\s\{-\}$/\1 }/ge
 
 	" ADD A SPACE BEFORE ANY `{` THAT IS PREPENDED BY ANYTHING AND IS THE
 	" FIRST `{` IN THE LINE
-	:%s/^\([^#]\{-\}\)\s\{-\}{/\1 {/ge
+	:g!/.\{-\}".\{-\}{/s/^\([^"]\{-\}\)\([^#]\{-\}\)\s\{-\}{/\1\2 {/ge
+	" :%s/^\([^#]\{-\}\)\s\{-\}{/\1 {/ge
 
 	" REPLACE ANY `(` FOLLOWED BY ONE OR MORE SPACES WITH A SINGLE `(`
 	:%s/(\s\+/(/ge
@@ -71,8 +78,8 @@ function! RubyFormat()
 	" REPLACE ANY `]` PREPENDED BY ONE OR MORE SPACES WITH A SINGLE `]`
 	:%s/\s\+\]/]/ge
 
-	" REPLACE `->{` WITH `-> {`
-	%s/->{/-> {/ge
+	" REPLACE `->{` WITH `-> {` OR `lambda{` WITH `lambda {`
+	%s/\(->\|\<lambda\>\){/\1 {/ge
 
 	" REPLACE `puts...` WITH `puts ...`
 	%s/puts\(\S.*\)/puts \1/ge
@@ -128,7 +135,7 @@ function! RubyFormat()
 	"   puts "hello"
 	"   puts "there"
 	" end
-	:g!/.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)\<do\>\([^\n]\)/\1do\r\2/ge
+	:g!/".*\<do\>.*"\|.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)\<do\>\([^\n]\)/\1do\r\2/ge
 	
 	" do
 	"   puts "hello" end
