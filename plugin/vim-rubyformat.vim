@@ -1,4 +1,4 @@
-" indentation settings
+" INDENTATION SETTINGS
 filetype plugin indent on
 set autoindent
 set smarttab
@@ -28,7 +28,7 @@ function! RubyFormat()
 	" START ON THEIR OWN LINE AND DO NOT HAVE CODE BEFORE IT
 	" ALTHOUGH IF THE KEYWORD CLASS IS BEING USED IN THE
 	" CONTEXT OF `object.class` DO NOT CREATE EMPTY LINES
-	:%s/\([^\n\|^.]\)\(\(\<class\>\C\|\<def\>\C\).*\)/\1\r\r\2/ge
+	:g!/^\s\{-\}\(\<class\C\>\|\<def\C\>\)\|[^"]\{-\}#/s/\([^\n\|^.\|^#]\)\(\(\<class\>\C\|\<def\>\C\).*\)/\1\r\r\2/ge
 
 	" ON A LINE THAT STARTS WITH THE KEYWORD `end`, MOVE ANYTHING AFTER IT
 	" TO IT'S OWN LINE AS WELL AS MAKE SURE THAT ANYTHING THAT COMES AFTER
@@ -37,8 +37,6 @@ function! RubyFormat()
 	
 	" MAKE A SPACE BETWEEN ANY `{` OR `}` CHARACTERS ON LINES THAT DO NOT CONTAIN INTERPOLATION
 	:%s/\(.\{-\}\){\s\{-\}\(\S\{-\}\)\(\s\{-\}".\{-\}{.\{-\}}.\{-\}".\{-\}\)\s\=\s\{-\}}/\1{ \2\3 }/ge
-	" :g!/[^"]\+#{/s/\(\S\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
-	" :g!/[^"]\+.*#{/s/\(\S\{-\}\)\s\{-\}\(\S\+\)}/\1 \2 }/ge
 
 	" MAKE A SPACE BETWEEN ANY `{` OR `}` CHARACTERS ON LINES THAT DO CONTAIN INTERPOLATION
 	" :g/[^"]\+#{/s/\([^#]\{-\}\){\s\{-\}\(\S\+\)/\1{ \2/ge
@@ -135,7 +133,7 @@ function! RubyFormat()
 	"   puts "hello"
 	"   puts "there"
 	" end
-	:g!/".*\<do\>.*"\|.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)\<do\>\([^\n]\)/\1do\r\2/ge
+	:g!/[^"]\{-\}#\|".*\<do\>.*"\|.*\<do\>.\{-\}\<end\>\|.*\<do\>.\{-\}|/s/\(.*\)\<do\>\([^\n]\)/\1do\r\2/ge
 	
 	" do
 	"   puts "hello" end
@@ -177,9 +175,11 @@ function! RubyFormat()
 	:g/"[^"]\+"\|'[^']\+'/s/\s\+"\(.\{-\}\)"/ "\1"/ge 
 	:g/"[^"]\+"\|'[^']\+'/s/\s\+\("[^"]\{-\}"\)\s\+/ \1 /ge 
 
-	" REMOVE TRAILING WHITE SPACE FROM ANY LINE
-	%s/\s\+$//e
-	
+	" REMOVE EXTRA WHITE SPACE FROM ANY LINE
+	:%s/\s\+$//e
+	:%s/\s\+/ /ge
+	:%s/,\s\=/, /ge
+
 	" REMOVE EXTRA LINES FROM CONFIG VARIABLE g:remove_extra_lines = 3
 	:execute '%s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'
 
