@@ -184,8 +184,9 @@ function! RubyFormat()
 	" REMOVE EXTRA LINES FROM CONFIG VARIABLE g:remove_extra_lines = 3
 	:execute '%s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'
 
-	" SAME AS ABOVE BUT DOES NOT DELETE LINES UNTIL TEXT APEARS
-	" :execute 'g!/^$\n\+.*/s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'
+	" REMOVE ANY EMPTY LINES FROM THE TOP OF THE PAGE
+	" DOWN UNTIL THE FIRST LINE OF CODE/COMMENT
+	:g/^\(\n\)\@<!$/s/\n\+//ge
 
 	" REMOVE EXTRA LINES AFTER A COMMA
 	%s/,\n\+/,\r/e
