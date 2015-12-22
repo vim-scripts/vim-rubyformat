@@ -1,4 +1,4 @@
-# VIM-RUBYFORMAT
+# Vim-RubyFormat
 
 `vim-rubyformat` is a simple `vim` plugin, that automatically
 reformats/beautifies ruby code, either when a ruby file is saved

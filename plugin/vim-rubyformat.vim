@@ -125,6 +125,10 @@ function! RubyFormat()
 	" }
 	:g!/.*".*{.*\|.*{.*".*{\|.*{.*}\(.call.*\)\=$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
 
+	" SAME AS THE ABOVE BUT ALLOWS FOR `def hello { puts "#{}" ... \n }`
+	:g!/{\({\)\@<!.*\|.*{.*}$\|".*["]\+.*{.*["]\+.*"\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\(.*".*{.*".*\)/\1\r\t\2/ge
+
+
 	" do puts "hello"
 	"   puts "there"
 	" end
@@ -146,9 +150,6 @@ function! RubyFormat()
 	" `5.times do puts "hey" end` <- WHERE BOTH KEYWORD AND END ARE
 	" ON THE SAME LINE. THE SAME GOES FOR `if true do puts "it's true" end`
 	:g!/^\s\{-\}\<if\|do\>/s/\([^\n\|^\s\|^\t]\)\<end\>/\1\rend
-
-	" SAME AS THE ABOVE BUT ALLOWS FOR `def hello { puts "#{}" ... \n }`
-	:g!/.*{.*}$\|".*["]\+.*{.*["]\+.*"\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\(.*".*{.*".*\)/\1\r\t\2/ge
 
 	" IF NOT IN THE SAME LINE STYLE OF `def hello { puts "hello" }`
 	" def hello {
