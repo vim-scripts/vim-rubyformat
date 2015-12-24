@@ -46,7 +46,7 @@ in your vimrc file.
 
 ===========================================================================
 
-### EXAMPLE REFORMATS:
+### EXAMPLE AUTO REFORMATS:
 
 Before:
 ```

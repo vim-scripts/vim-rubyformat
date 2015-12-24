@@ -170,16 +170,14 @@ function! RubyFormat()
 	:g!/[^#]{.*}\s\{-\}$/s/\(.*".*#{.*\)}\s\{-\}$/\1\r}/ge
 	
 	" REPLACE MULTIPLE WHITE SPACE CHARACTERS WITH A SINGLE SPACE
-	:g!/"[^"]\+"\|'[^']\+'/s/\s\+/ /ge 
-	" REPLACE MULTIPLE WHITE SPACE CHARACTERS WITH A SINGLE SPACE
-	" ON LINES THAT CONTAIN QUOTES
-	:g/"[^"]\+"\|'[^']\+'/s/\s\+"\(.\{-\}\)"/ "\1"/ge 
-	:g/"[^"]\+"\|'[^']\+'/s/\s\+\("[^"]\{-\}"\)\s\+/ \1 /ge 
+	" AS LONG AS THE SPACE DOESNT CONTAIN QUOTES BEFORE OR AFTER THE
+	" SPACE ACHIEVED USING NEGATIVE LOOKAHEAD AND NEGATIVE LOOKBEHING
+	" REGULAR EXPRESSIONS
+	:%s/\s\+\(["\|'].*\|'.*\)\@<!\|\s\+\(.*"\|.*'\)\@!/ /ge 
 
 	" REMOVE EXTRA WHITE SPACE FROM ANY LINE
-	:%s/\s\+$//e
-	:%s/\s\+/ /ge
-	:%s/,\s\=/, /ge
+	:%s/\s\+$//ge
+	:%s/,\s\=/, /ge " MAKE SURE NOT INSIDE OF QUOTES
 
 	" REMOVE EXTRA LINES FROM CONFIG VARIABLE g:remove_extra_lines = 3
 	:execute '%s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'
