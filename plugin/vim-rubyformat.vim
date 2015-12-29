@@ -26,9 +26,9 @@ function! RubyFormat()
 
 	" ALWAYS MAKE SURE THERE IS ONE SPACE AFTER ANY `{` AND BEFORE ANY `}`
 	" THAT IS NOT INSIDE OF QUOTES
-	:%s/\(["\|'].\{-\}\)\@<!{\s\=\s\{-\}\(.\{-\}\)\s\{-\}\s\=}\(.\{-\}["\|'\|}]\)\@!/{ \2 }/ge
+	:%s/\(["\|'\|`].\{-\}\)\@<!{\s\=\s\{-\}\(.\{-\}\)\s\{-\}\s\=}\(.\{-\}["\|`\|'\|}]\)\@!/{ \2 }/ge
 	" TODO: FIX ISSUE OF {} IF IN LINE SUCH AS `hello{stuff{}}`: TEMPORARY FIX
-	%s/\(["\|'].\{-\}\)\@<!{}\(.\{-\}["\|']\)\@!/{ }/ge
+	:%s/\(["\|'].\{-\}\)\@<!{}\(.\{-\}["\|']\)\@!/{ }/ge
 
 	" DELETE ANY SPACE CHARACTERS AFTER THE START OF A 
 	" STRING INTERPOLATION `#{` OR BEFORE THE END `}`
@@ -36,7 +36,7 @@ function! RubyFormat()
 
 	" ADD A SPACE BEFORE ANY `{` IF THERE IS ANYTHING BEFORE IT AND IS
 	" NOT INSIDE OF ANY QUOTES
-	:%s/\(.\{-\}\)\s\=\s\{-\}\(["\|'].\{-\}\)\@<!{/\1 {/ge
+	:%s/\(.\{-\}\)\s\=\s\{-\}\(["\|'\|`].\{-\}\)\@<!{/\1 {/ge
 	
 	" MAKE SURE KEYWORDS SUCH AS `class` OR `def`
 	" START ON THEIR OWN LINE AND DO NOT HAVE CODE BEFORE IT
@@ -95,7 +95,7 @@ function! RubyFormat()
 	"   puts "sup"
 	"   puts "hello"
 	" }
-	:g!/.*".*{.*\|.*{.*".*{\|.*{.*}\(.call.*\)\=$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
+	:g!/.*["\|'\|`].*{.*\|.*{.*["\|'\|`].*{\|.*{.*}\(.call.*\)\=$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
 
 	" SAME AS THE ABOVE BUT ALLOWS FOR `def hello { puts "#{}" ... \n }`
 	:g!/{\({\)\@<!.*\|.*{.*}$\|".*["]\+.*{.*["]\+.*"\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\(.*".*{.*".*\)/\1\r\t\2/ge
@@ -131,7 +131,7 @@ function! RubyFormat()
 	" }
 	if &ft != 'eruby' " FOR RUBY FILES THAT AREN'T ERUBY FILETYPE
 		" TODO: MAKE SURE THIS IS WORKING FOR RUBY FILES
-		:g!/.*".*}.*".*\|.*{.*}\(.call.*\)\=$/s/\([^\r]\)\(.*\)}/\1\2\r}/ge
+		:g!/["\|`\|']\s\{-}$\|.*["\|`].*}.*["\|`].*\|.*{.*}\(.call.*\)\=$/s/\([^\r]\)\(.*\)}/\1\2\r}/ge
 	endif
 	
 	" THIS IS THE SAME AS THE ABOVE, EXCEPT WILL STILL WORK LIKE THIS:
