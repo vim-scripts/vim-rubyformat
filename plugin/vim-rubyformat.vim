@@ -120,7 +120,7 @@ function! RubyFormat()
 	" IT'S IN A LINE THAT LOOKS LIKE THE FOLLOWING:
 	" `5.times do puts "hey" end` <- WHERE BOTH KEYWORD AND END ARE
 	" ON THE SAME LINE. THE SAME GOES FOR `if true do puts "it's true" end`
-	:g!/^\s\{-\}\<if\|do\>/s/\([^\n\|^\s\|^\t]\)\<end\>/\1\rend/ge
+	:g!/^\s\{-}\<end\>\|^\s\{-}#\|^\s\{-\}\<if\|do\>/s/\([^\n\|^\s\|^\t]\)\<end\>/\1\rend/ge
 
 	" IF NOT IN THE SAME LINE STYLE OF `def hello { puts "hello" }`
 	" def hello {
