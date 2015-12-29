@@ -131,7 +131,7 @@ function! RubyFormat()
 	" }
 	if &ft != 'eruby' " FOR RUBY FILES THAT AREN'T ERUBY FILETYPE
 		" TODO: MAKE SURE THIS IS WORKING FOR RUBY FILES
-		:g!/["\|`\|']\s\{-}$\|.*["\|`].*}.*["\|`].*\|.*{.*}\(.call.*\)\=$/s/\([^\r]\)\(.*\)}/\1\2\r}/ge
+		:g!/["\|`\|']\s\{-}$\|.*["\|`].*}.*["\|`].*\|.*{.*}\(.call.*\)\=$/s/\([^\r]\)\(.*\)\([^\r]\+\)}/\1\2\3\r}/ge
 	endif
 	
 	" THIS IS THE SAME AS THE ABOVE, EXCEPT WILL STILL WORK LIKE THIS:
