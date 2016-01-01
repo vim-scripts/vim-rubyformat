@@ -23,12 +23,21 @@ endwhile
 function! RubyFormat()
 	" SAVE CURSOR POSITION IN WINDOW BEFORE FORMAT
 	:let l:winview = winsaveview()
-
+	
 	" ALWAYS MAKE SURE THERE IS ONE SPACE AFTER ANY `{` AND BEFORE ANY `}`
 	" THAT IS NOT INSIDE OF QUOTES
-	:%s/\(["\|'\|`].\{-\}\)\@<!{\s\=\s\{-\}\(.\{-\}\)\s\{-\}\s\=}\(.\{-\}["\|`\|'\|}]\)\@!/{ \2 }/ge
-	" TODO: FIX ISSUE OF {} IF IN LINE SUCH AS `hello{stuff{}}`: TEMPORARY FIX
-	:%s/\(["\|'].\{-\}\)\@<!{}\(.\{-\}["\|']\)\@!/{ }/ge
+	:%s/{\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/{ /ge
+	:%s/\(\s\+\|\s\=\)}\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/ }/ge
+
+	" REPLACE ANY SPACES AFTER ANY `(` OR BEFORE ANY `)` AS LONG AS
+	" IT ISN'T INSIDE OF QUOTES
+	:%s/(\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/(/ge
+	:%s/\(\s\+\|\s\=\))\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/)/ge
+
+	" REPLACE ANY SPACES AFTER ANY `[` OR BEFORE ANY `]` AS LONG AS
+	" IT ISN'T INSIDE OF QUOTES
+	:%s/\[\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/[/ge
+	:%s/\(\s\+\|\s\=\)\]\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/]/ge
 
 	" DELETE ANY SPACE CHARACTERS AFTER THE START OF A 
 	" STRING INTERPOLATION `#{` OR BEFORE THE END `}`
@@ -36,21 +45,13 @@ function! RubyFormat()
 
 	" ADD A SPACE BEFORE ANY `{` IF THERE IS ANYTHING BEFORE IT AND IS
 	" NOT INSIDE OF ANY QUOTES
-	:%s/\(.\{-\}\)\s\=\s\{-\}\(["\|'\|`].\{-\}\)\@<!{/\1 {/ge
-	
+	:%s/\(.\{-\}\)\(\s\+\|\s\=\){\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/\1 {/ge
+
 	" MAKE SURE KEYWORDS SUCH AS `class` OR `def`
 	" START ON THEIR OWN LINE AND DO NOT HAVE CODE BEFORE IT
 	" ALTHOUGH IF THE KEYWORD CLASS IS BEING USED IN THE
 	" CONTEXT OF `object.class` DO NOT CREATE EMPTY LINES
 	:g!/^\s\{-\}\(\<class\C\>\|\<def\C\>\)\|[^"]\{-\}#/s/\([^\n\|^.\|^#]\)\(\(\<class\>\C\|\<def\>\C\).*\)/\1\r\r\2/ge
-
-	" REPLACE ANY SPACES AFTER ANY `(` OR BEFORE ANY `)` AS LONG AS
-	" IT ISN'T INSIDE OF QUOTES
-	:%s/\(\s\+\|\s\=\)\(["\|'].\{-\}\)\@<!\()\)\|\((\)\(\s\+\|\s\=\)\(.\{-\}["\|']\)\@!/\3\4/ge
-
-	" REPLACE ANY SPACES AFTER ANY `[` OR BEFORE ANY `]` AS LONG AS
-	" IT ISN'T INSIDE OF QUOTES
-	:%s/\(\s\+\|\s\=\)\(["\|'].\{-\}\)\@<!\(\]\)\|\(\[\)\(\s\+\|\s\=\)\(.\{-\}["\|']\)\@!/\3\4/ge
 
 	" REPLACE `puts...` WITH `puts ...`
 	%s/puts\(\S.*\)/puts \1/ge
