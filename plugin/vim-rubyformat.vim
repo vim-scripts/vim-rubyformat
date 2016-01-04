@@ -1,3 +1,6 @@
+" TODO: FIX END KEYWORD AND SUCH IN ERB FILES BEING DROPPED
+" TODO: MAKE SETTING TO REMOVE EXTRA LINES FROM BOTTOM OF FILE
+
 " INDENTATION SETTINGS
 filetype plugin indent on
 set autoindent
@@ -27,7 +30,7 @@ function! RubyFormat()
 	" ALWAYS MAKE SURE THERE IS ONE SPACE AFTER ANY `{` AND BEFORE ANY `}`
 	" THAT IS NOT INSIDE OF QUOTES
 	:%s/{\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/{ /ge
-	:%s/\(\s\+\|\s\=\)}\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/ }/ge
+	:g!/^}/s/\(\s\+\|\s\=\)}\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/ }/ge
 
 	" REPLACE ANY SPACES AFTER ANY `(` OR BEFORE ANY `)` AS LONG AS
 	" IT ISN'T INSIDE OF QUOTES
@@ -68,13 +71,13 @@ function! RubyFormat()
 
 	" REPLACE ANYTHING LIKE `{|i|   ` WITH `{|i|`
 	" IF THE LINE DOESN'T END WITH A `}`
-	:g!/|\(.\{-\}\)|\(.\{-\}\)}$/s/|\(.*\)|\(.\{-\}\)\(\s\{-\}\)\(\S\)/|\1| \4/ge
+	:g!/||\||\(.\{-\}\)|\(.\{-\}\)}$/s/|\(.*\)|\(.\{-\}\)\(\s\{-\}\)\(\S\)/|\1| \4/ge
 
 	" REPLACE `{ |...|...}` WITH `{ |...| ...}` ON LINES
 	" THAT START WITH `{ |...|...`, WITH ANYTHING IN BETWEEN, THAT
 	" ENDS WITH A `}` AND DOES NOT HAVE A SPACE `{ |...|` <- HERE
 	" :g/|\(.*\)|\(\S\)\(.*\)}$/s/|\(.*\)|\(\s\+\|\s\=\)\(.*\)}$/|\1| \3}/ge
-	:%s/\(|.\{-\}|\)\(\s\+\|\s\=\)/\1 /ge
+	:g!/||/s/\(|.\{-\}|\)\(\s\+\|\s\=\)/\1 /ge
 
 	" TODO: DO BELOW 3 REGEX METHODS BELOW WITH DO BLOCKS
 
@@ -96,7 +99,7 @@ function! RubyFormat()
 	"   puts "sup"
 	"   puts "hello"
 	" }
-	:g!/.*["\|'\|`].*{.*\|.*{.*["\|'\|`].*{\|.*{.*}\(.call.*\)\=$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
+	:g!/{\s\+\([^\n]\+\)\@!\|.*["\|'\|`].*{.*\|.*{.*["\|'\|`].*{\|.*{.*}\(.call.*\)\=$\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\([^\r]\)/\1\r\t\2/ge
 
 	" SAME AS THE ABOVE BUT ALLOWS FOR `def hello { puts "#{}" ... \n }`
 	:g!/{\({\)\@<!.*\|.*{.*}$\|".*["]\+.*{.*["]\+.*"\|.*{\s\{-\}\(|.\{-\}|\).*/s/\(.*{\s\{-\}\)\(.*".*{.*".*\)/\1\r\t\2/ge
@@ -152,10 +155,15 @@ function! RubyFormat()
 	:%s/,\s\=/, /ge " MAKE SURE NOT INSIDE OF QUOTES
 
 	" REMOVE EXTRA LINES AFTER A COMMA
-	%s/,\n\+/,\r/e " MAKE SURE NOT INSIDE OF QUOTES
+	%s/,\n\+/,\r/ge " MAKE SURE NOT INSIDE OF QUOTES
 
 	" REMOVE EXTRA LINES FROM CONFIG VARIABLE g:remove_extra_lines = 3
 	:execute '%s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'
+
+	" MAKE SURE THERE IS ALWAYS AT LEAST ONE EMPTY
+	" LINE AFTER ANY `}` IF IT ISNT THE LAST `}`
+	" IN THE FILE
+	:g/}.\{-\}\n\(\n\+\)\@!\([^\n]\)\@=/s/^\(.*\)}\(.\{-\}\)\(.\{-\}\n.\{-\}}\)\@!\s\{-\}$/\1}\2\r/ge
 
 	" REMOVE ANY EMPTY LINES FROM THE TOP OF THE PAGE
 	" DOWN UNTIL THE FIRST LINE OF CODE/COMMENT
@@ -193,5 +201,6 @@ if g:rubyformat_on_save > 0
 
 	" DO THE SAME AS THE ABOVE `autocmd` BUT FOR ERUBY FILES
 	" TODO: ADD MORE SPECIFIX ERB BASED REFORMATTING
-	autocmd FileType eruby autocmd BufWritePre <buffer> :silent! call RubyFormat()
+	" autocmd FileType eruby autocmd BufWritePre <buffer> :silent! call RubyFormat()
+	" TEMPORARILY DISABLE TILL FIX
 endif
