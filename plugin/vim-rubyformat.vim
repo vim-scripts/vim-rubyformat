@@ -1,5 +1,17 @@
+" TODO: MAKE SURE THERE IS ALWAYS AT LEAST ONE SPACE AFTER THE
+" START OF ANY LEGITIMATE COMMENTS `#`, BUT NOT INSIDE OF QUOTES ETC.
 " TODO: FIX END KEYWORD AND SUCH IN ERB FILES BEING DROPPED
-" TODO: MAKE SETTING TO REMOVE EXTRA LINES FROM BOTTOM OF FILE
+" TODO: MAKE SETTING TO REMOVE EXTRA LINES FROM BOTTOM AND TOP OF FILE
+" TODO: MAKE SETTING TO ALLOW TO ENABLE/DISABLE REMOVE TRAILING
+" SPACES LINE NUMBER 168
+" TODO: LINE NUMBER 170. FIX POSSIBLE MULTIPLE SPACES AFTER
+" COMMA NOT BEING DELETED. PLUS CHECK WHOLE FILE MULTIPLE SPACES
+" INTO ONE SPACE STUFF. LOOK INTO LINE NUMBER 164, POSSIBLY
+" FIX REGEX WITH LOOKBACKS AND LOOKAHEADS/NESTED LOOKSBACKS/LOOKAHEADS
+" TODO: USE PROPER SUBSITUTION AND VIMSCRIPT FUNCTIONS RATHER THAN JUST :S
+" AND :G, AS WELL AS REFACTOR FUNCTIONS THAT USE LOOKAHEADS AND LOOKBEHINDS
+" SUCH AS THE FIRST FEW THAT PUT A SPACE IN APPROPRIATE SPOTS WITH `{`, `[`
+" ETC... TO BE ONE FUNCTION THAT TAKES ARGS FOR START AND END ARGS
 
 " INDENTATION SETTINGS
 filetype plugin indent on
@@ -29,18 +41,18 @@ function! RubyFormat()
 	
 	" ALWAYS MAKE SURE THERE IS ONE SPACE AFTER ANY `{` AND BEFORE ANY `}`
 	" THAT IS NOT INSIDE OF QUOTES
-	:%s/{\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/{ /ge
-	:g!/^}/s/\(\s\+\|\s\=\)}\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/ }/ge
+	:%s/{\(\s\+\|\s\=\)\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/{ /ge
+	:g!/^}/s/\(\s\+\|\s\=\)}\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/ }/ge
 
 	" REPLACE ANY SPACES AFTER ANY `(` OR BEFORE ANY `)` AS LONG AS
 	" IT ISN'T INSIDE OF QUOTES
-	:%s/(\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/(/ge
-	:%s/\(\s\+\|\s\=\))\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/)/ge
+	:%s/(\(\s\+\|\s\=\)\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/(/ge
+	:%s/\(\s\+\|\s\=\))\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/)/ge
 
 	" REPLACE ANY SPACES AFTER ANY `[` OR BEFORE ANY `]` AS LONG AS
 	" IT ISN'T INSIDE OF QUOTES
-	:%s/\[\(\s\+\|\s\=\)\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/[/ge
-	:%s/\(\s\+\|\s\=\)\]\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/]/ge
+	:%s/\[\(\s\+\|\s\=\)\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/[/ge
+	:%s/\(\s\+\|\s\=\)\]\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/]/ge
 
 	" DELETE ANY SPACE CHARACTERS AFTER THE START OF A 
 	" STRING INTERPOLATION `#{` OR BEFORE THE END `}`
@@ -48,8 +60,8 @@ function! RubyFormat()
 
 	" ADD A SPACE BEFORE ANY `{` IF THERE IS ANYTHING BEFORE IT AND IS
 	" NOT INSIDE OF ANY QUOTES
-	:%s/\(.\{-\}\)\(\s\+\|\s\=\){\(\(\(".\{-\}\)\@<=.\{-\}"\)\|\(\('.\{-\}\)\@<=.\{-\}'\)\|\(\(`.\{-\}\)\@<=.\{-\}`\)\)\@!/\1 {/ge
-
+	:%s/\(.\{-\}\)\(\s\+\|\s\=\){\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/\1 {/ge
+	
 	" MAKE SURE KEYWORDS SUCH AS `class` OR `def`
 	" START ON THEIR OWN LINE AND DO NOT HAVE CODE BEFORE IT
 	" ALTHOUGH IF THE KEYWORD CLASS IS BEING USED IN THE
@@ -76,7 +88,6 @@ function! RubyFormat()
 	" REPLACE `{ |...|...}` WITH `{ |...| ...}` ON LINES
 	" THAT START WITH `{ |...|...`, WITH ANYTHING IN BETWEEN, THAT
 	" ENDS WITH A `}` AND DOES NOT HAVE A SPACE `{ |...|` <- HERE
-	" :g/|\(.*\)|\(\S\)\(.*\)}$/s/|\(.*\)|\(\s\+\|\s\=\)\(.*\)}$/|\1| \3}/ge
 	:g!/||/s/\(|.\{-\}|\)\(\s\+\|\s\=\)/\1 /ge
 
 	" TODO: DO BELOW 3 REGEX METHODS BELOW WITH DO BLOCKS
@@ -148,10 +159,14 @@ function! RubyFormat()
 	" AS LONG AS THE SPACE DOESNT CONTAIN QUOTES BEFORE OR AFTER THE
 	" SPACE ACHIEVED USING NEGATIVE LOOKAHEAD AND NEGATIVE LOOKBEHING
 	" REGULAR EXPRESSIONS
+	" TODO: REFACTOR LIKE FIRST REGEXES IN THE BEGINING TO DO WITH `{`, `(`
+	" AND `[` TYPE BRACKETS REGEX
 	:%s/\s\+\(["\|'].*\|'.*\)\@<!\|\s\+\(.*"\|.*'\)\@!/ /ge 
 
-	" REMOVE EXTRA WHITE SPACE FROM ANY LINE
+	" TODO: CREATE A SETTING FOR ENABLING/DISABLING THIS REGEX
+	" REMOVE EXTRA WHITE SPACE FROM THE END OF ANY LINE
 	:%s/\s\+$//ge
+
 	:%s/,\s\=/, /ge " MAKE SURE NOT INSIDE OF QUOTES
 
 	" REMOVE EXTRA LINES AFTER A COMMA
