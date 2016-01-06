@@ -3,15 +3,18 @@
 " TODO: FIX END KEYWORD AND SUCH IN ERB FILES BEING DROPPED
 " TODO: MAKE SETTING TO REMOVE EXTRA LINES FROM BOTTOM AND TOP OF FILE
 " TODO: MAKE SETTING TO ALLOW TO ENABLE/DISABLE REMOVE TRAILING
-" SPACES LINE NUMBER 168
-" TODO: LINE NUMBER 170. FIX POSSIBLE MULTIPLE SPACES AFTER
+" SPACES LINE NUMBER 176
+" TODO: LINE NUMBER 178. FIX POSSIBLE MULTIPLE SPACES AFTER
 " COMMA NOT BEING DELETED. PLUS CHECK WHOLE FILE MULTIPLE SPACES
-" INTO ONE SPACE STUFF. LOOK INTO LINE NUMBER 164, POSSIBLY
+" INTO ONE SPACE STUFF. LOOK INTO LINE NUMBER 172, POSSIBLY
 " FIX REGEX WITH LOOKBACKS AND LOOKAHEADS/NESTED LOOKSBACKS/LOOKAHEADS
 " TODO: USE PROPER SUBSITUTION AND VIMSCRIPT FUNCTIONS RATHER THAN JUST :S
 " AND :G, AS WELL AS REFACTOR FUNCTIONS THAT USE LOOKAHEADS AND LOOKBEHINDS
 " SUCH AS THE FIRST FEW THAT PUT A SPACE IN APPROPRIATE SPOTS WITH `{`, `[`
 " ETC... TO BE ONE FUNCTION THAT TAKES ARGS FOR START AND END ARGS
+" TODO: MAKE SURE BLOCKS SUCH AS `if`/`def` ETC... IF ARE EMPTY OR ONLY HAVE FOR
+" EXAMPLE A COMMENT INSIDE OF THEM, REMOVE EMPTY LINES
+" TODO: ADD HIGH PRIORITY AUTO FORMATTING RULES. LINE 105
 
 " INDENTATION SETTINGS
 filetype plugin indent on
@@ -35,24 +38,32 @@ while i <= g:remove_extra_lines
 	let i += 1
 endwhile
 
+" TODO: MAKE LOOP OF ARGS ITEMS TO MAKE SURE NOT INSIDE OF INSIDE
+" OF PREMADE LIST
+function! SubstituteOutsideOfItems(regex, substitution)
+	" Example: %s/\(.\{-\}\)\(\s\+\|\s\=\)\(|.\{-\}\)\@<!|\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/\1 |/ge
+	execute '%s/'.a:regex.'\(\(".\{-\}\)\@<=.\{-\}"'.'\|\(''.\{-\}\)\@<=.\{-\}'''.'\|\(`.\{-\}\)\@<=.\{-\}`'.'\|\(\/.\{-\}\)\@<=.\{-\}\/'.'\)\@!/'.a:substitution.'/ge'
+endfunction
+
 function! RubyFormat()
 	" SAVE CURSOR POSITION IN WINDOW BEFORE FORMAT
-	:let l:winview = winsaveview()
+	let l:winview = winsaveview()
 	
 	" ALWAYS MAKE SURE THERE IS ONE SPACE AFTER ANY `{` AND BEFORE ANY `}`
 	" THAT IS NOT INSIDE OF QUOTES
-	:%s/{\(\s\+\|\s\=\)\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/{ /ge
+	" call SubstituteOutsideOfItems('{\(\s\+\|\s\=\)', '{ ')
 	:g!/^}/s/\(\s\+\|\s\=\)}\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/ }/ge
 
 	" REPLACE ANY SPACES AFTER ANY `(` OR BEFORE ANY `)` AS LONG AS
 	" IT ISN'T INSIDE OF QUOTES
-	:%s/(\(\s\+\|\s\=\)\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/(/ge
-	:%s/\(\s\+\|\s\=\))\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/)/ge
+	call SubstituteOutsideOfItems('(\(\s\+\|\s\=\)', '(')
+	call SubstituteOutsideOfItems('\(\s\+\|\s\=\))', ')')
 
 	" REPLACE ANY SPACES AFTER ANY `[` OR BEFORE ANY `]` AS LONG AS
 	" IT ISN'T INSIDE OF QUOTES
-	:%s/\[\(\s\+\|\s\=\)\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/[/ge
-	:%s/\(\s\+\|\s\=\)\]\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\)\@!/]/ge
+	call SubstituteOutsideOfItems('\[\(\s\+\|\s\=\)', '[')
+	call SubstituteOutsideOfItems('\(\s\+\|\s\=\)\]', ']')
+	" %s/\s\(\s\+\|\s\=\)\]\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/]/ge
 
 	" DELETE ANY SPACE CHARACTERS AFTER THE START OF A 
 	" STRING INTERPOLATION `#{` OR BEFORE THE END `}`
@@ -60,7 +71,7 @@ function! RubyFormat()
 
 	" ADD A SPACE BEFORE ANY `{` IF THERE IS ANYTHING BEFORE IT AND IS
 	" NOT INSIDE OF ANY QUOTES
-	:%s/\(.\{-\}\)\(\s\+\|\s\=\){\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/\1 {/ge
+	call SubstituteOutsideOfItems('\(.\{-\}\)\(\s\+\|\s\=\){', '\1 {')
 	
 	" MAKE SURE KEYWORDS SUCH AS `class` OR `def`
 	" START ON THEIR OWN LINE AND DO NOT HAVE CODE BEFORE IT
@@ -73,24 +84,25 @@ function! RubyFormat()
 
 	" REPLACE ANY `|` FOLLOWED OR PREPENDED BY ONE OR MORE
 	" SPACES WITH A SINGLE `|`, E.G. `| name |` BECOMES `|name|`
-	:%s/\(["\|'].\{-\}\)\@<!|\(\s\+\|\s\=\)\|\(\s\+\|\s\=\)|\(.\{-\}["\|']\)\@!/|/ge
+	" IF NOT SURROUNDED BY QUOTES ET CETERA
+	call SubstituteOutsideOfItems('|\(\s\+\|\s\=\)\|\(\s\+\|\s\=\)|', '|')
 
 	" PUT A SPACE BEFORE ANY `|` THAT HAS SOMETHING BEFORE IT, BUT DOES NOT
 	" HAVE ANY OTHER `|` BEFORE IT OR ISN'T INSIDE OF QUOTES
-	:%s/\(.\{-\}\)\(\s\+\|\s\=\)\([|\|"\|'].\{-\}\)\@<!|/\1 |/ge
+	call SubstituteOutsideOfItems('\(.\{-\}\)\(\s\+\|\s\=\)\(|.\{-\}\)\@<!|', '\1 |')
+	
+	" MAKE SURE THERE IS ALWAYS 1 SPACE BEFORE ANY `|...|`
+	" IF NOT SURROUNDED BY QUOTES ET CETERA
+	call SubstituteOutsideOfItems('\(\s\=\|\s\+\)|\(.\{-\}\)|\(\s\=\|\s\+\)', ' |\2|')
+
+	" MAKE SURE THERE IS ALWAYS 1 SPACE ANY `|...|` IF THERE
+	" IS ANY CHARACTERS FOLLOWING EXCEPT FOR SPACES AND ALSO
+	" IF NOT SURROUNDED BY QUOTES ET CETERA
+	call SubstituteOutsideOfItems('|\(.\{-\}\)|\(\s\=\|\s\+\)\(\S\)\@=', '|\1| ')
 	
 	" REFACTORED TO HERE: ---------------------------------------------------
 
-	" REPLACE ANYTHING LIKE `{|i|   ` WITH `{|i|`
-	" IF THE LINE DOESN'T END WITH A `}`
-	:g!/||\||\(.\{-\}\)|\(.\{-\}\)}$/s/|\(.*\)|\(.\{-\}\)\(\s\{-\}\)\(\S\)/|\1| \4/ge
-
-	" REPLACE `{ |...|...}` WITH `{ |...| ...}` ON LINES
-	" THAT START WITH `{ |...|...`, WITH ANYTHING IN BETWEEN, THAT
-	" ENDS WITH A `}` AND DOES NOT HAVE A SPACE `{ |...|` <- HERE
-	:g!/||/s/\(|.\{-\}|\)\(\s\+\|\s\=\)/\1 /ge
-
-	" TODO: DO BELOW 3 REGEX METHODS BELOW WITH DO BLOCKS
+	" TODO: DO BELOW 3 REGEX METHODS BELOW WITH DO BLOCKS ---HIGH PRIORITY---
 
 	" TODO: REDO
 	" def hello {|name|puts "sup"
@@ -100,7 +112,7 @@ function! RubyFormat()
 	"   puts "sup"
 	"   puts "hello"
 	" }
-	:g!/.*{\s\{-\}|.\{-\}|\s\+$\|.*{.*}\(.call.*\)\=$/s/\(.*\s\{-\}{\s\{-\}\(|.\{-\}|\)\s\{-\}.\{-\}\)\([^\r]\)/\1\r\t\3/ge
+	:g!/.*{\s\{-\}|.\{-\}|\s\+$\|.*{.*}\(.call.*\)\=\s\{-\}$/s/\(.*\s\{-\}{\s\{-\}\(|.\{-\}|\)\s\{-\}.\{-\}\)\([^\r]\)/\1\r\t\3/ge
 
 	" TODO: REDO
 	" def hello {puts "sup"
@@ -146,7 +158,7 @@ function! RubyFormat()
 	" }
 	if &ft != 'eruby' " FOR RUBY FILES THAT AREN'T ERUBY FILETYPE
 		" TODO: MAKE SURE THIS IS WORKING FOR RUBY FILES
-		:g!/["\|`\|']\s\{-}$\|.*["\|`].*}.*["\|`].*\|.*{.*}\(.call.*\)\=$/s/\([^\r]\)\(.*\)\([^\r]\+\)}/\1\2\3\r}/ge
+		:g!/["\|`\|']\s\{-}$\|.*["\|`].*}.*["\|`].*\|.*{.*}\(.call.*\)\=\(\s\=\|\s\+\)$/s/\([^\r]\)\(.*\)\([^\r]\+\)}/\1\2\3\r}/ge
 	endif
 	
 	" THIS IS THE SAME AS THE ABOVE, EXCEPT WILL STILL WORK LIKE THIS:
@@ -156,12 +168,8 @@ function! RubyFormat()
 	:g!/[^#]{.*}\s\{-\}$/s/\(.*".*#{.*\)}\s\{-\}$/\1\r}/ge
 	
 	" REPLACE MULTIPLE WHITE SPACE CHARACTERS WITH A SINGLE SPACE
-	" AS LONG AS THE SPACE DOESNT CONTAIN QUOTES BEFORE OR AFTER THE
-	" SPACE ACHIEVED USING NEGATIVE LOOKAHEAD AND NEGATIVE LOOKBEHING
-	" REGULAR EXPRESSIONS
-	" TODO: REFACTOR LIKE FIRST REGEXES IN THE BEGINING TO DO WITH `{`, `(`
-	" AND `[` TYPE BRACKETS REGEX
-	:%s/\s\+\(["\|'].*\|'.*\)\@<!\|\s\+\(.*"\|.*'\)\@!/ /ge 
+	" IF NOT SURROUNDED BY QUOTES ET CETERA
+	call SubstituteOutsideOfItems('\s\+', ' ')
 
 	" TODO: CREATE A SETTING FOR ENABLING/DISABLING THIS REGEX
 	" REMOVE EXTRA WHITE SPACE FROM THE END OF ANY LINE
