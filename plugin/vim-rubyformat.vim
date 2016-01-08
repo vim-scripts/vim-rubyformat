@@ -3,18 +3,14 @@
 " TODO: FIX END KEYWORD AND SUCH IN ERB FILES BEING DROPPED
 " TODO: MAKE SETTING TO REMOVE EXTRA LINES FROM BOTTOM AND TOP OF FILE
 " TODO: MAKE SETTING TO ALLOW TO ENABLE/DISABLE REMOVE TRAILING
-" SPACES LINE NUMBER 176
-" TODO: LINE NUMBER 178. FIX POSSIBLE MULTIPLE SPACES AFTER
-" COMMA NOT BEING DELETED. PLUS CHECK WHOLE FILE MULTIPLE SPACES
-" INTO ONE SPACE STUFF. LOOK INTO LINE NUMBER 172, POSSIBLY
-" FIX REGEX WITH LOOKBACKS AND LOOKAHEADS/NESTED LOOKSBACKS/LOOKAHEADS
-" TODO: USE PROPER SUBSITUTION AND VIMSCRIPT FUNCTIONS RATHER THAN JUST :S
-" AND :G, AS WELL AS REFACTOR FUNCTIONS THAT USE LOOKAHEADS AND LOOKBEHINDS
-" SUCH AS THE FIRST FEW THAT PUT A SPACE IN APPROPRIATE SPOTS WITH `{`, `[`
-" ETC... TO BE ONE FUNCTION THAT TAKES ARGS FOR START AND END ARGS
+" SPACES LINE NUMBER 174
 " TODO: MAKE SURE BLOCKS SUCH AS `if`/`def` ETC... IF ARE EMPTY OR ONLY HAVE FOR
 " EXAMPLE A COMMENT INSIDE OF THEM, REMOVE EMPTY LINES
-" TODO: ADD HIGH PRIORITY AUTO FORMATTING RULES. LINE 105
+" TODO: ADD HIGH PRIORITY AUTO FORMATTING RULES. LINE 103
+" TODO: CREATE FUNCTION TO ACTUALLY LOOP THROUGH LINE BY LINE, AND EACH
+" QUOTE/ETC SET A FLAG TO TRUE TO FIND IN BETWEEN QUOTES OVER MULTIPLE LINES,
+" AND EVERY SECOND QUOTE, RESET FLAG SO WE CAN FIND MULTIPLE ITEMS IN QUOTES
+" OVER MULTIPLE LINES WITHOUT EXTREMELY LARGE/HARD TO MAINTAIN REGEX
 
 " INDENTATION SETTINGS
 filetype plugin indent on
@@ -50,8 +46,9 @@ function! RubyFormat()
 	let l:winview = winsaveview()
 	
 	" ALWAYS MAKE SURE THERE IS ONE SPACE AFTER ANY `{` AND BEFORE ANY `}`
-	" THAT IS NOT INSIDE OF QUOTES
-	" call SubstituteOutsideOfItems('{\(\s\+\|\s\=\)', '{ ')
+	" THAT IS NOT INSIDE OF QUOTES, TODO: IF NOT ARGS ON OWN LINE EG.
+	" `-> {|name|` followed by new line
+	call SubstituteOutsideOfItems('{\(\s\+\|\s\=\)', '{ ')
 	:g!/^}/s/\(\s\+\|\s\=\)}\(\(".\{-\}\)\@<=.\{-\}"\|\('.\{-\}\)\@<=.\{-\}'\|\(`.\{-\}\)\@<=.\{-\}`\|\(\/.\{-\}\)\@<=.\{-\}\/\)\@!/ }/ge
 
 	" REPLACE ANY SPACES AFTER ANY `(` OR BEFORE ANY `)` AS LONG AS
@@ -85,7 +82,8 @@ function! RubyFormat()
 	" REPLACE ANY `|` FOLLOWED OR PREPENDED BY ONE OR MORE
 	" SPACES WITH A SINGLE `|`, E.G. `| name |` BECOMES `|name|`
 	" IF NOT SURROUNDED BY QUOTES ET CETERA
-	call SubstituteOutsideOfItems('|\(\s\+\|\s\=\)\|\(\s\+\|\s\=\)|', '|')
+	call SubstituteOutsideOfItems('|\(\s\+\|\s\=\)', '|')
+	call SubstituteOutsideOfItems('\(\s\+\|\s\=\)|', '|')
 
 	" PUT A SPACE BEFORE ANY `|` THAT HAS SOMETHING BEFORE IT, BUT DOES NOT
 	" HAVE ANY OTHER `|` BEFORE IT OR ISN'T INSIDE OF QUOTES
@@ -147,7 +145,7 @@ function! RubyFormat()
 	" IT'S IN A LINE THAT LOOKS LIKE THE FOLLOWING:
 	" `5.times do puts "hey" end` <- WHERE BOTH KEYWORD AND END ARE
 	" ON THE SAME LINE. THE SAME GOES FOR `if true do puts "it's true" end`
-	:g!/^\s\{-}\<end\>\|^\s\{-}#\|^\s\{-\}\<if\|do\>/s/\([^\n\|^\s\|^\t]\)\<end\>/\1\rend/ge
+	:g!/=\<end\>\|^\s\{-}\<end\>\|^\s\{-}#\|^\s\{-\}\<if\|do\>/s/\([^\n\|^\s\|^\t]\)\<end\>/\1\rend/ge
 
 	" IF NOT IN THE SAME LINE STYLE OF `def hello { puts "hello" }`
 	" def hello {
@@ -175,10 +173,13 @@ function! RubyFormat()
 	" REMOVE EXTRA WHITE SPACE FROM THE END OF ANY LINE
 	:%s/\s\+$//ge
 
-	:%s/,\s\=/, /ge " MAKE SURE NOT INSIDE OF QUOTES
+	" TURN ANY COMMA WITH ANY AMOUNT OF SPACES BEFORE OR AFTER IT TO `, `
+	" IF IT ISN'T INSIDE OF QUOTES ET CETERA
+	call SubstituteOutsideOfItems('\(\s\+\|\s\=\),\(\s\+\|\s\=\)', ', ')
 
-	" REMOVE EXTRA LINES AFTER A COMMA
-	%s/,\n\+/,\r/ge " MAKE SURE NOT INSIDE OF QUOTES
+	" TURN ANY COMMA WITH MORE THAN ONE EMPTY LINE AFTER IT TO JUST
+	" A COMMA FOLLOWED BY ONE EMPTY LINE IF IT ISN'T INSIDE OF QUOTES ET CETERA
+	" %s/,\(\(\s\+\|\s\=\)\n\(\s\=\|\s\+\)\)\+/,\r/ge
 
 	" REMOVE EXTRA LINES FROM CONFIG VARIABLE g:remove_extra_lines = 3
 	:execute '%s/\n\{'.g:remove_extra_lines.'\}\n\+/'.g:lines.'/ge'
